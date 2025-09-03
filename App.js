@@ -27,7 +27,10 @@ const PROCESSES = [
   'Asservi',
   'Oficinas',
   'Mase',
-  'Otros'
+  'Calidad',
+  'Salud y Seguridad',
+  'CEDI',
+  'Materias Primas'
 ];
 
 // Componente de alerta personalizada simple
@@ -169,6 +172,7 @@ const AttendanceApp = () => {
   const [selectedProcess, setSelectedProcess] = useState('');
   const [attendeeName, setAttendeeName] = useState('');
   const [attendeeCedula, setAttendeeCedula] = useState('');
+  const [attendeeFirma, setAttendeeFirma] = useState('');
   const [attendees, setAttendees] = useState([]);
   const [showProcessModal, setShowProcessModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -228,6 +232,11 @@ const AttendanceApp = () => {
       return;
     }
 
+    if (!attendeeFirma.trim()) {
+      showAlert('error', 'Campo requerido', 'La firma es obligatoria');
+      return;
+    }
+
     const exists = attendees.find(a => a.cedula === attendeeCedula.trim());
     if (exists) {
       showAlert('error', 'Registro duplicado', 'Esta cedula ya esta registrada en el sistema');
@@ -239,7 +248,7 @@ const AttendanceApp = () => {
       name: attendeeName.trim(),
       process: selectedProcess,
       cedula: attendeeCedula.trim(),
-      firma: '',
+      firma: attendeeFirma.trim(),
       timestamp: new Date().toISOString(),
       registeredAt: new Date().toLocaleTimeString('es-ES', { 
         hour: '2-digit', 
@@ -250,6 +259,7 @@ const AttendanceApp = () => {
     setAttendees(prev => [newAttendee, ...prev]);
     setAttendeeName('');
     setAttendeeCedula('');
+    setAttendeeFirma('');
     
     showAlert('success', 'Registro exitoso', attendeeName.trim() + ' ha sido registrado correctamente');
   };
@@ -281,7 +291,7 @@ const AttendanceApp = () => {
         ...attendees.map(attendee => [
           attendee.name,
           attendee.process,
-          '',
+          attendee.firma,
           attendee.cedula
         ])
       ];
@@ -448,6 +458,19 @@ const AttendanceApp = () => {
               onChangeText={setAttendeeCedula}
               placeholder="Ej: 1234567890"
               keyboardType="numeric"
+              returnKeyType="next"
+              placeholderTextColor="#999"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Firma *</Text>
+            <TextInput
+              style={styles.input}
+              value={attendeeFirma}
+              onChangeText={setAttendeeFirma}
+              placeholder="Ingrese su firma"
+              autoCapitalize="words"
               returnKeyType="done"
               onSubmitEditing={registerAttendee}
               placeholderTextColor="#999"
@@ -457,10 +480,10 @@ const AttendanceApp = () => {
           <TouchableOpacity
             style={[
               styles.registerBtn,
-              (!attendeeName.trim() || !selectedProcess || !attendeeCedula.trim()) && styles.registerBtnDisabled
+              (!attendeeName.trim() || !selectedProcess || !attendeeCedula.trim() || !attendeeFirma.trim()) && styles.registerBtnDisabled
             ]}
             onPress={registerAttendee}
-            disabled={!attendeeName.trim() || !selectedProcess || !attendeeCedula.trim()}
+            disabled={!attendeeName.trim() || !selectedProcess || !attendeeCedula.trim() || !attendeeFirma.trim()}
           >
             <Ionicons name="checkmark-circle" size={22} color="#fff" />
             <Text style={styles.registerBtnText}>Registrar Asistencia</Text>
@@ -511,7 +534,7 @@ const AttendanceApp = () => {
                     <Text style={styles.attendeeName}>{item.name}</Text>
                     <View style={styles.attendeeDetails}>
                       <Text style={styles.attendeeProcess}>{item.process}</Text>
-                      <Text style={styles.attendeeCedula}>C.I: {item.cedula}</Text>
+                      <Text style={styles.attendeeCedula}>C.C: {item.cedula}</Text>
                     </View>
                     <Text style={styles.attendeeTime}>
                       {item.registeredAt}
