@@ -20,6 +20,7 @@ import XLSX from 'xlsx';
 
 const { width } = Dimensions.get('window');
 
+// Procesos a los cuales se les da las Charlas
 const PROCESSES = [
   'Acabados',
   'Hilanderia', 
@@ -275,8 +276,10 @@ const AttendanceApp = () => {
     try {
       const today = new Date();
       const dateStr = today.toLocaleDateString('es-ES').replace(/\//g, '-');
-      const fileName = 'Asistencia_' + dateStr + '.xlsx';
+      const fileName = 'Asistencia_' + dateStr + '.xlsx'; // Nombre por defecto que se crea el excel
 
+
+      // El excel se crea con esta Estructura
       const excelData = [
         ['LISTA DE ASISTENCIA'],
         ['Fecha: ' + today.toLocaleDateString('es-ES', { 
