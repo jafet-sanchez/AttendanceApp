@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  StatusBar,
-  FlatList,
-  Modal,
-  Dimensions,
-  Platform} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+  StyleSheet, // Para crear y organizar estilos CSS-like
+  View, // Contenedor básico
+  Text, // para mostrar texto 
+  TextInput, // Campo de entrada de texto
+  TouchableOpacity, // Botón personalizable que responde al toque
+  ScrollView, // Contenedor con scroll vertical/horizontal
+  SafeAreaView, // Contenedor que respeta las áreas seguras del dispositivo
+  StatusBar, // Controla la barra de estado del dispositivo (batería, hora, etc.)
+  FlatList, // Lista optimizada para grandes cantidades de datos
+  Modal, // Ventana emergente/popup sobre la pantalla principal
+  Dimensions, // Para obtener dimensiones de la pantalla
+  Platform} from 'react-native'; // Para detectar si es iOS o Android
+import { Ionicons } from '@expo/vector-icons'; // exportacion de iconos vectoriales
 
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -170,17 +170,17 @@ const simpleAlertStyles = StyleSheet.create({
 });
 
 const AttendanceApp = () => {
-  const [selectedProcess, setSelectedProcess] = useState('');
-  const [attendeeName, setAttendeeName] = useState('');
-  const [attendeeCedula, setAttendeeCedula] = useState('');
-  const [attendeeFirma, setAttendeeFirma] = useState('');
-  const [attendees, setAttendees] = useState([]);
-  const [showProcessModal, setShowProcessModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isExporting, setIsExporting] = useState(false);
+  const [selectedProcess, setSelectedProcess] = useState(''); // Proceso seleccionado
+  const [attendeeName, setAttendeeName] = useState(''); // Nombre del asistente
+  const [attendeeCedula, setAttendeeCedula] = useState(''); // Cédula
+  const [attendeeFirma, setAttendeeFirma] = useState(''); // Firma
+  const [attendees, setAttendees] = useState([]); // Lista de asistentes registrados
+  const [showProcessModal, setShowProcessModal] = useState(false); // Mostrar modal
+  const [searchQuery, setSearchQuery] = useState(''); // Búsqueda
+  const [isExporting, setIsExporting] = useState(false); // Estado de exportación
   
   // Estados para alertas
-  const [alertConfig, setAlertConfig] = useState({
+  const [alertConfig, setAlertConfig] = useState({ // Configuración de alertas
     visible: false,
     type: 'info',
     title: '',
@@ -243,7 +243,8 @@ const AttendanceApp = () => {
       showAlert('error', 'Registro duplicado', 'Esta cedula ya esta registrada en el sistema');
       return;
     }
-
+     
+    // Crear nuevo registro
     const newAttendee = {
       id: Date.now().toString(),
       name: attendeeName.trim(),
@@ -257,6 +258,8 @@ const AttendanceApp = () => {
       })
     };
 
+
+    // Agregar al inicio de la lista y limpiar formulario
     setAttendees(prev => [newAttendee, ...prev]);
     setAttendeeName('');
     setAttendeeCedula('');
@@ -290,7 +293,7 @@ const AttendanceApp = () => {
         })],
         ['Total de asistentes: ' + attendees.length],
         [''],
-        ['Nombre', 'Proceso', 'Firma', 'Cedula'],
+        ['Nombre', 'Proceso', 'Firma', 'Cedula'], // capos para el formulario
         ...attendees.map(attendee => [
           attendee.name,
           attendee.process,
@@ -299,26 +302,28 @@ const AttendanceApp = () => {
         ])
       ];
 
+
+      // Crear archivo Excel
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(excelData);
 
-      ws['!cols'] = [
-        { width: 35 },
-        { width: 18 },
-        { width: 25 },
-        { width: 15 }
+      ws['!cols'] = [      // define el ancho de las columnas del excel
+        { width: 35 },    // Columna "Nombre" - 35 caracteres de ancho
+        { width: 18 },   // Columna "Proceso" - 18 caracteres de ancho 
+        { width: 25 },  // Columna "Firma" - 25 caracteres de ancho
+        { width: 15 }  // Columna "Cedula" - 15 caracteres de ancho
       ];
 
       XLSX.utils.book_append_sheet(wb, ws, 'Asistencia');
 
       const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
       
-      const documentsUri = FileSystem.documentDirectory + fileName;
+      const documentsUri = FileSystem.documentDirectory + fileName; // ruta donde se guarda el archivo en los dispositivos
       await FileSystem.writeAsStringAsync(documentsUri, wbout, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      if (await Sharing.isAvailableAsync()) {
+      if (await Sharing.isAvailableAsync()) { 
         await Sharing.shareAsync(documentsUri, {
           mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
           dialogTitle: 'Enviar Lista de Asistencia'
@@ -345,7 +350,7 @@ const AttendanceApp = () => {
       'Estas seguro de eliminar a ' + attendee.name + ' de la lista?',
       () => {
         setAttendees(prev => prev.filter(a => a.id !== id));
-        // Mostrar confirmación de eliminación con nuestra alerta personalizada
+        // Mostrar confirmación de eliminación con alerta personalizada
         showAlert('success', 'Eliminado', 'Registro eliminado correctamente');
       },
       true
