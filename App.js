@@ -1,6 +1,8 @@
+// Hay que mejorar la App sea lo mas Rapido posible
+
 import React, { useState } from 'react';
 import {
-  StyleSheet, // Para crear y organizar estilos CSS-like
+  StyleSheet, // Para crear y organizar estilos CSS
   View, // Contenedor básico
   Text, // para mostrar texto 
   TextInput, // Campo de entrada de texto
