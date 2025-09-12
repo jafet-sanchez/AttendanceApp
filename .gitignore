@@ -104,8 +104,6 @@ build/
 # Local configuration file (sdk path, etc)
 local.properties
 
-# Log/OS Files
-
 # Android Studio generated files and folders
 captures/
 .externalNativeBuild/
@@ -752,10 +750,6 @@ paket-files/
 __pycache__/
 *.pyc
 
-# Cake - Uncomment if you are using it
-# tools/**
-# !tools/packages.config
-
 # Tabs Studio
 *.tss
 
@@ -816,5 +810,3 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 
-### VisualStudio Patch ###
-# Additional files built by Visual Studio
