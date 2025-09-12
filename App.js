@@ -1,189 +1,28 @@
-// App mejorada con mejor UX/UI, animaciones y SVG personalizados
+// Hay que mejorar la App sea lo mas Rapido posible
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  StyleSheet,
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  SafeAreaView,
-  StatusBar,
-  FlatList,
-  Modal,
-  Dimensions,
-  Platform,
-  Animated
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import Svg, { Path, Circle, G, Rect, Polygon } from 'react-native-svg';
+  StyleSheet, // Para crear y organizar estilos CSS
+  View, // Contenedor basico
+  Text, // para mostrar texto 
+  TextInput, // Campo de entrada de texto
+  TouchableOpacity, // personalizable que responde al toque
+  ScrollView, // Contenedor con scroll vertical/horizontal
+  SafeAreaView, // Contenedor que respeta las Ã¡reas seguras del dispositivo
+  StatusBar, // Controla la barra de estado del dispositivo (baterÃ­a, hora, etc.)
+  FlatList, // Lista optimizada para grandes cantidades de datos
+  Modal, // Ventana emergente/popup sobre la pantalla principal
+  Dimensions, // Para obtener dimensiones de la pantalla
+  Platform} from 'react-native'; // Para detectar si es iOS o Android
+import { Ionicons } from '@expo/vector-icons'; // exportacion de iconos vectoriales
 
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import XLSX from 'xlsx';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
-// SVG Icons personalizados
-const AttendanceIcon = ({ size = 24, color = "#fff" }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path
-      d="M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z"
-      fill={color}
-    />
-    <Path
-      d="M12 14C8.13401 14 5 17.134 5 21H19C19 17.134 15.866 14 12 14Z"
-      fill={color}
-    />
-    <Circle cx="18" cy="6" r="3" fill="#FF4757" />
-    <Path d="M17 6L18 7L19 5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-  </Svg>
-);
-
-const ProcessIcon = ({ size = 24, color = "#4CAF50" }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Rect x="3" y="3" width="18" height="18" rx="2" fill={color} fillOpacity="0.1"/>
-    <Path
-      d="M9 12L11 14L15 10"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <Path
-      d="M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z"
-      stroke={color}
-      strokeWidth="2"
-    />
-  </Svg>
-);
-
-const ExcelIcon = ({ size = 20, color = "#fff" }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path
-      d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z"
-      fill={color}
-    />
-    <Path
-      d="M14 2V8H20"
-      fill="none"
-      stroke="#FF9800"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <Path
-      d="M10 12L14 16M14 12L10 16"
-      stroke="#FF9800"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </Svg>
-);
-
-const FormIcon = ({ size = 24, color = "#4CAF50" }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path
-      d="M14 2H6C4.9 2 4 2.9 4 4V20C4 21.1 4.9 22 6 22H18C19.1 22 20 21.1 20 20V8L14 2Z"
-      fill={color}
-      fillOpacity="0.1"
-    />
-    <Path
-      d="M14 2V8H20"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <Path
-      d="M8 13H16M8 17H13"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </Svg>
-);
-
-const StatsIcon = ({ size = 32, color = "#2196F3" }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="2" fill={color} fillOpacity="0.1"/>
-    <Path
-      d="M8 14S9.5 16 12 16S16 14 16 14"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-    <Circle cx="9" cy="9" r="1" fill={color}/>
-    <Circle cx="15" cy="9" r="1" fill={color}/>
-  </Svg>
-);
-
-// Componente de animación para números
-const AnimatedNumber = ({ value, style }) => {
-  const animatedValue = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.spring(animatedValue, {
-      toValue: value,
-      useNativeDriver: false,
-      tension: 100,
-      friction: 8,
-    }).start();
-  }, [value]);
-
-  return (
-    <Animated.View>
-      <Text style={style}>{value}</Text>
-    </Animated.View>
-  );
-};
-
-// Componente de entrada con animación
-const AnimatedInput = ({ style, focused, ...props }) => {
-  const borderAnimation = useRef(new Animated.Value(0)).current;
-  const scaleAnimation = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(borderAnimation, {
-        toValue: focused ? 1 : 0,
-        duration: 200,
-        useNativeDriver: false,
-      }),
-      Animated.spring(scaleAnimation, {
-        toValue: focused ? 1.02 : 1,
-        useNativeDriver: true,
-        tension: 100,
-        friction: 8,
-      }),
-    ]).start();
-  }, [focused]);
-
-  const borderColor = borderAnimation.interpolate({
-    inputRange: [0, 1],
-    outputRange: ['#e0e0e0', '#4CAF50'],
-  });
-
-  return (
-    <Animated.View
-      style={[
-        style,
-        {
-          borderColor,
-          transform: [{ scale: scaleAnimation }],
-        },
-      ]}
-    >
-      <TextInput {...props} />
-    </Animated.View>
-  );
-};
-
+// Procesos a los cuales se les da las Charlas
 const PROCESSES = [
   'Acabados',
   'Hilanderia', 
@@ -197,42 +36,8 @@ const PROCESSES = [
   'Materias Primas'
 ];
 
-// Componente de alerta mejorada con animación
+// Componente de alerta personalizada simple
 const SimpleAlert = ({ visible, type, title, message, onConfirm, onCancel, showCancel = false }) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
-
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(scaleAnim, {
-          toValue: 1,
-          useNativeDriver: true,
-          tension: 100,
-          friction: 8,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(scaleAnim, {
-          toValue: 0.8,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [visible]);
-
   if (!visible) return null;
 
   const getConfig = () => {
@@ -251,17 +56,12 @@ const SimpleAlert = ({ visible, type, title, message, onConfirm, onCancel, showC
   const config = getConfig();
 
   return (
-    <Modal transparent visible={visible} animationType="none">
-      <Animated.View style={[simpleAlertStyles.overlay, { opacity: fadeAnim }]}>
-        <Animated.View 
-          style={[
-            simpleAlertStyles.container,
-            { transform: [{ scale: scaleAnim }] }
-          ]}
-        >
+    <Modal transparent visible={visible} animationType="fade">
+      <View style={simpleAlertStyles.overlay}>
+        <View style={simpleAlertStyles.container}>
           <View style={[simpleAlertStyles.header, { backgroundColor: config.color + '20' }]}>
             <View style={[simpleAlertStyles.iconContainer, { backgroundColor: config.color }]}>
-              <Ionicons name={config.icon} size={28} color="#fff" />
+              <Ionicons name={config.icon} size={24} color="#fff" />
             </View>
           </View>
           <View style={simpleAlertStyles.content}>
@@ -284,66 +84,105 @@ const SimpleAlert = ({ visible, type, title, message, onConfirm, onCancel, showC
               <Text style={simpleAlertStyles.confirmText}>Aceptar</Text>
             </TouchableOpacity>
           </View>
-        </Animated.View>
-      </Animated.View>
+        </View>
+      </View>
     </Modal>
   );
 };
 
+const simpleAlertStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  container: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 320,
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+  },
+  header: {
+    paddingTop: 20,
+    paddingBottom: 15,
+    alignItems: 'center',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+  },
+  iconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  message: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  actions: {
+    flexDirection: 'row',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  button: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f5f5f5',
+    marginRight: 8,
+  },
+  confirmButton: {
+    marginLeft: 8,
+  },
+  cancelText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  confirmText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+});
+
 const AttendanceApp = () => {
-  const [selectedProcess, setSelectedProcess] = useState('');
-  const [attendeeName, setAttendeeName] = useState('');
-  const [attendeeCedula, setAttendeeCedula] = useState('');
-  const [attendeeFirma, setAttendeeFirma] = useState('');
-  const [attendees, setAttendees] = useState([]);
-  const [showProcessModal, setShowProcessModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isExporting, setIsExporting] = useState(false);
-  const [focusedInput, setFocusedInput] = useState(null);
+  const [selectedProcess, setSelectedProcess] = useState(''); // Proceso seleccionado
+  const [attendeeName, setAttendeeName] = useState(''); // Nombre del asistente
+  const [attendeeCedula, setAttendeeCedula] = useState(''); // Cedula
+  const [attendeeFirma, setAttendeeFirma] = useState(''); // Firma
+  const [attendees, setAttendees] = useState([]); // Lista de asistentes registrados
+  const [showProcessModal, setShowProcessModal] = useState(false); // Mostrar modal
+  const [searchQuery, setSearchQuery] = useState(''); // BÃºsqueda
+  const [isExporting, setIsExporting] = useState(false); // Estado de exportacion
   
-  // Animaciones
-  const headerAnimation = useRef(new Animated.Value(0)).current;
-  const listAnimation = useRef(new Animated.Value(0)).current;
-  const buttonPulse = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    // Animación inicial del header
-    Animated.sequence([
-      Animated.timing(headerAnimation, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(listAnimation, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // Pulso del botón principal
-    const pulseAnimation = () => {
-      Animated.sequence([
-        Animated.timing(buttonPulse, {
-          toValue: 1.05,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(buttonPulse, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-      ]).start(() => pulseAnimation());
-    };
-    
-    if (attendees.length === 0) {
-      pulseAnimation();
-    }
-  }, [attendees.length]);
-
   // Estados para alertas
-  const [alertConfig, setAlertConfig] = useState({
+  const [alertConfig, setAlertConfig] = useState({ // Configuracion de alertas
     visible: false,
     type: 'info',
     title: '',
@@ -353,6 +192,7 @@ const AttendanceApp = () => {
     showCancel: false
   });
 
+  // Funciones de alerta simplificadas
   const showAlert = (type, title, message, onConfirm = null, showCancel = false, onCancel = null) => {
     setAlertConfig({
       visible: true,
@@ -406,6 +246,7 @@ const AttendanceApp = () => {
       return;
     }
      
+    // Crear nuevo registro
     const newAttendee = {
       id: Date.now().toString(),
       name: attendeeName.trim(),
@@ -419,6 +260,8 @@ const AttendanceApp = () => {
       })
     };
 
+
+    // Agregar al inicio de la lista y limpiar formulario
     setAttendees(prev => [newAttendee, ...prev]);
     setAttendeeName('');
     setAttendeeCedula('');
@@ -438,8 +281,10 @@ const AttendanceApp = () => {
     try {
       const today = new Date();
       const dateStr = today.toLocaleDateString('es-ES').replace(/\//g, '-');
-      const fileName = 'Asistencia_' + dateStr + '.xlsx';
+      const fileName = 'Asistencia_' + dateStr + '.xlsx'; // Nombre por defecto que se crea el excel
 
+
+      // El excel se crea con esta Estructura
       const excelData = [
         ['LISTA DE ASISTENCIA'],
         ['Fecha: ' + today.toLocaleDateString('es-ES', { 
@@ -450,7 +295,7 @@ const AttendanceApp = () => {
         })],
         ['Total de asistentes: ' + attendees.length],
         [''],
-        ['Nombre', 'Proceso', 'Firma', 'Cedula'],
+        ['Nombre', 'Proceso', 'Firma', 'Cedula'], // capos para el formulario
         ...attendees.map(attendee => [
           attendee.name,
           attendee.process,
@@ -459,21 +304,23 @@ const AttendanceApp = () => {
         ])
       ];
 
+
+      // Crear archivo Excel
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.aoa_to_sheet(excelData);
 
-      ws['!cols'] = [
-        { width: 35 },
-        { width: 18 },
-        { width: 25 },
-        { width: 15 }
+      ws['!cols'] = [      // define el ancho de las columnas del excel
+        { width: 35 },    // Columna "Nombre" - 35 caracteres de ancho
+        { width: 18 },   // Columna "Proceso" - 18 caracteres de ancho 
+        { width: 25 },  // Columna "Firma" - 25 caracteres de ancho
+        { width: 15 }  // Columna "Cedula" - 15 caracteres de ancho
       ];
 
       XLSX.utils.book_append_sheet(wb, ws, 'Asistencia');
 
       const wbout = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
       
-      const documentsUri = FileSystem.documentDirectory + fileName;
+      const documentsUri = FileSystem.documentDirectory + fileName; // ruta donde se guarda el archivo en los dispositivos
       await FileSystem.writeAsStringAsync(documentsUri, wbout, {
         encoding: FileSystem.EncodingType.Base64,
       });
@@ -505,6 +352,7 @@ const AttendanceApp = () => {
       'Estas seguro de eliminar a ' + attendee.name + ' de la lista?',
       () => {
         setAttendees(prev => prev.filter(a => a.id !== id));
+        // Mostrar confirmacion de eliminacion con alerta personalizada
         showAlert('success', 'Eliminado', 'Registro eliminado correctamente');
       },
       true
@@ -525,25 +373,12 @@ const AttendanceApp = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#4CAF50" />
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       
-      <Animated.View 
-        style={[
-          styles.header,
-          {
-            opacity: headerAnimation,
-            transform: [{
-              translateY: headerAnimation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [-50, 0],
-              }),
-            }],
-          }
-        ]}
-      >
+      <View style={styles.header}>
         <View style={styles.headerContent}>
           <View style={styles.headerIcon}>
-            <AttendanceIcon size={32} color="#fff" />
+            <Ionicons name="people" size={28} color="#fff" />
           </View>
           <View style={styles.headerText}>
             <Text style={styles.headerTitle}>Control de Asistencias</Text>
@@ -556,71 +391,39 @@ const AttendanceApp = () => {
             </Text>
           </View>
         </View>
-        <View style={styles.headerDecoration}>
-          <View style={styles.decorativeCircle1} />
-          <View style={styles.decorativeCircle2} />
-          <View style={styles.decorativeCircle3} />
-        </View>
-      </Animated.View>
+      </View>
 
-      <Animated.View 
-        style={[
-          styles.statsContainer,
-          {
-            opacity: headerAnimation,
-            transform: [{
-              translateY: headerAnimation.interpolate({
-                inputRange: [0, 1],
-                outputRange: [30, 0],
-              }),
-            }],
-          }
-        ]}
-      >
+      <View style={styles.statsContainer}>
         <View style={styles.mainStat}>
-          <StatsIcon size={40} color="#2196F3" />
-          <AnimatedNumber value={stats.total} style={styles.mainStatNumber} />
+          <Text style={styles.mainStatNumber}>{stats.total}</Text>
           <Text style={styles.mainStatLabel}>Total Registrados</Text>
-          <View style={styles.statGlow} />
         </View>
         <TouchableOpacity 
           style={[styles.exportBtn, (isExporting || attendees.length === 0) && styles.exportBtnDisabled]}
           onPress={exportToExcel}
           disabled={isExporting || attendees.length === 0}
         >
-          <ExcelIcon size={22} color="#fff" />
+          <Ionicons 
+            name={isExporting ? "hourglass" : "download"} 
+            size={20} 
+            color="#fff" 
+          />
           <Text style={styles.exportBtnText}>
-            {isExporting ? 'Exportando...' : 'Exportar Excel'}
+            {isExporting ? 'Exportando...' : 'Excel'}
           </Text>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         
-        <Animated.View 
-          style={[
-            styles.formCard,
-            {
-              opacity: listAnimation,
-              transform: [{
-                translateY: listAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [30, 0],
-                }),
-              }],
-            }
-          ]}
-        >
+        <View style={styles.formCard}>
           <View style={styles.formHeader}>
-            <FormIcon size={28} color="#4CAF50" />
-            <Text style={styles.formTitle}>Registro Rápido</Text>
-            <View style={styles.formHeaderGlow} />
+            <Ionicons name="person-add" size={24} color="#4CAF50" />
+            <Text style={styles.formTitle}>Registro Rapido</Text>
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              <ProcessIcon size={16} color="#4CAF50" /> Proceso *
-            </Text>
+            <Text style={styles.label}>Proceso *</Text>
             <TouchableOpacity
               style={[styles.processButton, selectedProcess && styles.processButtonActive]}
               onPress={() => setShowProcessModal(true)}
@@ -638,51 +441,42 @@ const AttendanceApp = () => {
               />
             </TouchableOpacity>
             {selectedProcess && (
-              <View style={styles.selectedProcessBadge}>
-                <Text style={styles.selectedProcessText}>
-                  ✓ {stats.byProcess[selectedProcess] || 0} registrados en {selectedProcess}
-                </Text>
-              </View>
+              <Text style={styles.selectedProcessBadge}>
+                {stats.byProcess[selectedProcess] || 0} registrados en {selectedProcess}
+              </Text>
             )}
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>👤 Nombre Completo *</Text>
-            <AnimatedInput
+            <Text style={styles.label}>Nombre Completo *</Text>
+            <TextInput
               style={styles.input}
-              focused={focusedInput === 'name'}
               value={attendeeName}
               onChangeText={setAttendeeName}
               placeholder="Ej: Maria Gonzalez Lopez"
               autoCapitalize="words"
               returnKeyType="next"
               placeholderTextColor="#999"
-              onFocus={() => setFocusedInput('name')}
-              onBlur={() => setFocusedInput(null)}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>🆔 Número de Cédula *</Text>
-            <AnimatedInput
+            <Text style={styles.label}>Numero de Cedula *</Text>
+            <TextInput
               style={styles.input}
-              focused={focusedInput === 'cedula'}
               value={attendeeCedula}
               onChangeText={setAttendeeCedula}
               placeholder="Ej: 1234567890"
               keyboardType="numeric"
               returnKeyType="next"
               placeholderTextColor="#999"
-              onFocus={() => setFocusedInput('cedula')}
-              onBlur={() => setFocusedInput(null)}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>✍️ Firma *</Text>
-            <AnimatedInput
+            <Text style={styles.label}>Firma *</Text>
+            <TextInput
               style={styles.input}
-              focused={focusedInput === 'firma'}
               value={attendeeFirma}
               onChangeText={setAttendeeFirma}
               placeholder="Ingrese su firma"
@@ -690,57 +484,35 @@ const AttendanceApp = () => {
               returnKeyType="done"
               onSubmitEditing={registerAttendee}
               placeholderTextColor="#999"
-              onFocus={() => setFocusedInput('firma')}
-              onBlur={() => setFocusedInput(null)}
             />
           </View>
 
-          <Animated.View
-            style={{
-              transform: [{ scale: attendees.length === 0 ? buttonPulse : new Animated.Value(1) }]
-            }}
+          <TouchableOpacity
+            style={[
+              styles.registerBtn,
+              (!attendeeName.trim() || !selectedProcess || !attendeeCedula.trim() || !attendeeFirma.trim()) && styles.registerBtnDisabled
+            ]}
+            onPress={registerAttendee}
+            disabled={!attendeeName.trim() || !selectedProcess || !attendeeCedula.trim() || !attendeeFirma.trim()}
           >
-            <TouchableOpacity
-              style={[
-                styles.registerBtn,
-                (!attendeeName.trim() || !selectedProcess || !attendeeCedula.trim() || !attendeeFirma.trim()) && styles.registerBtnDisabled
-              ]}
-              onPress={registerAttendee}
-              disabled={!attendeeName.trim() || !selectedProcess || !attendeeCedula.trim() || !attendeeFirma.trim()}
-            >
-              <Ionicons name="checkmark-circle" size={24} color="#fff" />
-              <Text style={styles.registerBtnText}>Registrar Asistencia</Text>
-              <View style={styles.buttonGlow} />
-            </TouchableOpacity>
-          </Animated.View>
-        </Animated.View>
+            <Ionicons name="checkmark-circle" size={22} color="#fff" />
+            <Text style={styles.registerBtnText}>Registrar Asistencia</Text>
+          </TouchableOpacity>
+        </View>
 
-        <Animated.View 
-          style={[
-            styles.listCard,
-            {
-              opacity: listAnimation,
-              transform: [{
-                translateY: listAnimation.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [50, 0],
-                }),
-              }],
-            }
-          ]}
-        >
+        <View style={styles.listCard}>
           <View style={styles.listHeader}>
             <Text style={styles.listTitle}>
-              👥 Asistentes ({attendees.length})
+              Asistentes ({attendees.length})
             </Text>
             {attendees.length > 3 && (
               <View style={styles.searchBox}>
-                <Ionicons name="search" size={18} color="#4CAF50" />
+                <Ionicons name="search" size={16} color="#999" />
                 <TextInput
                   style={styles.searchInput}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
-                  placeholder="Buscar por nombre, cédula o proceso..."
+                  placeholder="Buscar..."
                   placeholderTextColor="#999"
                 />
               </View>
@@ -749,13 +521,8 @@ const AttendanceApp = () => {
 
           {attendees.length === 0 ? (
             <View style={styles.emptyState}>
-              <View style={styles.emptyIconContainer}>
-                <Ionicons name="people-outline" size={80} color="#E0E0E0" />
-                <View style={styles.emptyIconOverlay}>
-                  <Ionicons name="add-circle" size={30} color="#4CAF50" />
-                </View>
-              </View>
-              <Text style={styles.emptyTitle}>¡Comienza registrando!</Text>
+              <Ionicons name="people-outline" size={80} color="#ddd" />
+              <Text style={styles.emptyTitle}>Comienza registrando!</Text>
               <Text style={styles.emptySubtitle}>
                 Registra el primer asistente usando el formulario de arriba
               </Text>
@@ -776,13 +543,11 @@ const AttendanceApp = () => {
                   <View style={styles.attendeeInfo}>
                     <Text style={styles.attendeeName}>{item.name}</Text>
                     <View style={styles.attendeeDetails}>
-                      <View style={styles.processBadge}>
-                        <Text style={styles.attendeeProcess}>{item.process}</Text>
-                      </View>
-                      <Text style={styles.attendeeCedula}>🆔 {item.cedula}</Text>
+                      <Text style={styles.attendeeProcess}>{item.process}</Text>
+                      <Text style={styles.attendeeCedula}>C.C: {item.cedula}</Text>
                     </View>
                     <Text style={styles.attendeeTime}>
-                      🕐 Registrado: {item.registeredAt}
+                      {item.registeredAt}
                     </Text>
                   </View>
 
@@ -790,16 +555,16 @@ const AttendanceApp = () => {
                     style={styles.deleteBtn}
                     onPress={() => removeAttendee(item.id)}
                   >
-                    <Ionicons name="trash-outline" size={22} color="#ff4757" />
+                    <Ionicons name="trash-outline" size={20} color="#ff4757" />
                   </TouchableOpacity>
                 </View>
               )}
             />
           )}
-        </Animated.View>
+        </View>
       </ScrollView>
 
-      {/* Modal de Procesos mejorado */}
+      {/* Modal de Procesos */}
       <Modal
         visible={showProcessModal}
         transparent={true}
@@ -809,13 +574,12 @@ const AttendanceApp = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <ProcessIcon size={24} color="#4CAF50" />
               <Text style={styles.modalTitle}>Seleccionar Proceso</Text>
               <TouchableOpacity
                 onPress={() => setShowProcessModal(false)}
                 style={styles.modalClose}
               >
-                <Ionicons name="close-circle" size={28} color="#ff4757" />
+                <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
             </View>
             
@@ -833,9 +597,6 @@ const AttendanceApp = () => {
                   }}
                 >
                   <View style={styles.processOptionContent}>
-                    <View style={styles.processIconContainer}>
-                      <ProcessIcon size={20} color={selectedProcess === process ? "#4CAF50" : "#999"} />
-                    </View>
                     <Text style={[
                       styles.processOptionText,
                       selectedProcess === process && styles.processOptionTextActive
@@ -849,7 +610,7 @@ const AttendanceApp = () => {
                     </View>
                   </View>
                   {selectedProcess === process && (
-                    <Ionicons name="checkmark-circle" size={24} color="#4CAF50" />
+                    <Ionicons name="checkmark" size={20} color="#4CAF50" />
                   )}
                 </TouchableOpacity>
               ))}
@@ -872,249 +633,97 @@ const AttendanceApp = () => {
   );
 };
 
-const simpleAlertStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  container: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    width: '100%',
-    maxWidth: 340,
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 15 },
-    shadowOpacity: 0.3,
-    shadowRadius: 25,
-  },
-  header: {
-    paddingTop: 25,
-    paddingBottom: 20,
-    alignItems: 'center',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
-  iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  content: {
-    paddingHorizontal: 25,
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  message: {
-    fontSize: 15,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  actions: {
-    flexDirection: 'row',
-    paddingHorizontal: 25,
-    paddingBottom: 25,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  cancelButton: {
-    backgroundColor: '#f8f9fa',
-    marginRight: 10,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  confirmButton: {
-    marginLeft: 10,
-  },
-  cancelText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#666',
-  },
-  confirmText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
-  },
-});
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#f5f7fa',
   },
   header: {
     backgroundColor: '#4CAF50',
     paddingTop: Platform.OS === 'ios' ? 0 : 20,
-    paddingBottom: 25,
+    paddingBottom: 20,
     paddingHorizontal: 20,
-    borderBottomLeftRadius: 25,
-    borderBottomRightRadius: 25,
-    position: 'relative',
-    overflow: 'hidden',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    zIndex: 2,
   },
   headerIcon: {
-    width: 60,
-    height: 60,
+    width: 50,
+    height: 50,
     backgroundColor: 'rgba(255,255,255,0.2)',
-    borderRadius: 30,
+    borderRadius: 25,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 15,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   headerText: {
     flex: 1,
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#fff',
   },
   headerDate: {
-    fontSize: 15,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.9)',
-    marginTop: 4,
-    textTransform: 'capitalize',
-  },
-  headerDecoration: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    bottom: 0,
-    left: 0,
-  },
-  decorativeCircle1: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    top: -30,
-    right: -30,
-  },
-  decorativeCircle2: {
-    position: 'absolute',
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    bottom: -20,
-    right: 50,
-  },
-  decorativeCircle3: {
-    position: 'absolute',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    top: 20,
-    right: 100,
+    marginTop: 2,
   },
   statsContainer: {
     flexDirection: 'row',
     marginHorizontal: 20,
-    marginVertical: 20,
-    marginTop: -10,
+    marginVertical: 15,
   },
   mainStat: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingVertical: 25,
-    paddingHorizontal: 20,
-    borderRadius: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+    borderRadius: 15,
     alignItems: 'center',
-    marginRight: 12,
-    shadowColor: '#2196F3',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.15,
-    shadowRadius: 16,
-    elevation: 8,
-    position: 'relative',
-    overflow: 'hidden',
+    marginRight: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
   },
   mainStatNumber: {
-    fontSize: 36,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#2196F3',
-    marginTop: 10,
   },
   mainStatLabel: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#666',
-    marginTop: 6,
-    fontWeight: '500',
-  },
-  statGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: '#2196F3',
-    opacity: 0.6,
+    marginTop: 5,
   },
   exportBtn: {
     backgroundColor: '#FF9800',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 22,
-    paddingVertical: 25,
-    borderRadius: 20,
+    paddingHorizontal: 20,
+    borderRadius: 15,
     shadowColor: '#FF9800',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
-    minWidth: 130,
+    shadowRadius: 8,
+    elevation: 4,
   },
   exportBtnDisabled: {
-    backgroundColor: '#bdc3c7',
+    backgroundColor: '#ccc',
     shadowOpacity: 0,
     elevation: 0,
   },
   exportBtnText: {
     color: '#fff',
     fontWeight: 'bold',
-    marginLeft: 10,
-    fontSize: 14,
+    marginLeft: 8,
+    fontSize: 16,
   },
   content: {
     flex: 1,
@@ -1122,71 +731,49 @@ const styles = StyleSheet.create({
   },
   formCard: {
     backgroundColor: '#fff',
-    borderRadius: 25,
-    padding: 25,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
-    position: 'relative',
-    overflow: 'hidden',
+    shadowRadius: 12,
+    elevation: 6,
   },
   formHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 25,
-    position: 'relative',
-  },
-  formTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginLeft: 12,
-  },
-  formHeaderGlow: {
-    position: 'absolute',
-    bottom: -5,
-    left: 0,
-    right: 0,
-    height: 2,
-    backgroundColor: '#4CAF50',
-    opacity: 0.3,
-  },
-  inputGroup: {
     marginBottom: 20,
   },
+  formTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginLeft: 10,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
   label: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '600',
     color: '#555',
-    marginBottom: 10,
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginBottom: 8,
   },
   processButton: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#e8ecef',
-    borderRadius: 15,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
-    backgroundColor: '#f8f9fa',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    backgroundColor: '#fafafa',
   },
   processButtonActive: {
     borderColor: '#4CAF50',
     backgroundColor: '#f1f8e9',
-    elevation: 4,
-    shadowColor: '#4CAF50',
-    shadowOpacity: 0.2,
   },
   processButtonText: {
     fontSize: 16,
@@ -1197,51 +784,37 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   selectedProcessBadge: {
-    marginTop: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    backgroundColor: '#e8f5e8',
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  selectedProcessText: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#4CAF50',
-    fontWeight: '500',
+    marginTop: 6,
+    fontStyle: 'italic',
   },
   input: {
     borderWidth: 2,
-    borderColor: '#e8ecef',
-    borderRadius: 15,
-    paddingHorizontal: 18,
-    paddingVertical: 18,
+    borderColor: '#e0e0e0',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     fontSize: 16,
     backgroundColor: '#fff',
     color: '#333',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
   },
   registerBtn: {
     flexDirection: 'row',
     backgroundColor: '#2196F3',
-    paddingVertical: 20,
-    borderRadius: 18,
+    paddingVertical: 18,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 15,
+    marginTop: 10,
     shadowColor: '#2196F3',
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
-    position: 'relative',
-    overflow: 'hidden',
+    shadowRadius: 12,
+    elevation: 6,
   },
   registerBtnDisabled: {
-    backgroundColor: '#bdc3c7',
+    backgroundColor: '#ccc',
     shadowOpacity: 0,
     elevation: 0,
   },
@@ -1249,107 +822,72 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
-    marginLeft: 12,
-  },
-  buttonGlow: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    backgroundColor: '#64b5f6',
-    opacity: 0.6,
+    marginLeft: 10,
   },
   listCard: {
     backgroundColor: '#fff',
-    borderRadius: 25,
-    padding: 25,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 20,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowRadius: 12,
+    elevation: 6,
   },
   listHeader: {
-    marginBottom: 20,
+    marginBottom: 16,
   },
   listTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 15,
+    marginBottom: 12,
   },
   searchBox: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
-    borderRadius: 15,
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
   },
   searchInput: {
     flex: 1,
-    marginLeft: 10,
-    fontSize: 15,
+    marginLeft: 8,
+    fontSize: 14,
     color: '#333',
   },
   emptyState: {
     alignItems: 'center',
-    paddingVertical: 50,
-    position: 'relative',
-  },
-  emptyIconContainer: {
-    position: 'relative',
-    marginBottom: 20,
-  },
-  emptyIconOverlay: {
-    position: 'absolute',
-    bottom: -5,
-    right: -5,
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 2,
-    elevation: 4,
-    shadowColor: '#4CAF50',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    paddingVertical: 40,
   },
   emptyTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
     color: '#666',
+    marginTop: 15,
   },
   emptySubtitle: {
-    fontSize: 15,
+    fontSize: 14,
     color: '#999',
     textAlign: 'center',
-    marginTop: 10,
-    paddingHorizontal: 30,
-    lineHeight: 22,
+    marginTop: 8,
+    paddingHorizontal: 20,
   },
   attendeeItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 5,
+    paddingVertical: 12,
   },
   attendeeNumber: {
-    width: 35,
-    height: 35,
+    width: 30,
+    height: 30,
     backgroundColor: '#E3F2FD',
-    borderRadius: 18,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 15,
-    elevation: 2,
-    shadowColor: '#2196F3',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    marginRight: 12,
   },
   attendeeNumberText: {
     fontSize: 14,
@@ -1360,82 +898,63 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   attendeeName: {
-    fontSize: 17,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 6,
   },
   attendeeDetails: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  processBadge: {
-    backgroundColor: '#e8f5e8',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    marginRight: 10,
+    marginTop: 4,
   },
   attendeeProcess: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#4CAF50',
-    fontWeight: '600',
+    fontWeight: '500',
+    marginRight: 15,
   },
   attendeeCedula: {
     fontSize: 13,
     color: '#666',
-    fontWeight: '500',
   },
   attendeeTime: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#999',
-    fontStyle: 'italic',
+    marginTop: 2,
   },
   deleteBtn: {
-    padding: 12,
-    borderRadius: 12,
-    backgroundColor: '#ffebee',
+    padding: 10,
   },
   itemSeparator: {
     height: 1,
-    backgroundColor: '#f5f5f5',
-    marginVertical: 10,
-    marginLeft: 50,
+    backgroundColor: '#f0f0f0',
+    marginVertical: 8,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#fff',
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    maxHeight: '85%',
-    elevation: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -5 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 25,
+    padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
   modalTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#333',
-    flex: 1,
-    marginLeft: 10,
   },
   modalClose: {
-    padding: 5,
+    padding: 4,
   },
   modalBody: {
     padding: 20,
@@ -1444,33 +963,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    borderRadius: 15,
-    marginBottom: 10,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    marginBottom: 8,
     backgroundColor: '#f8f9fa',
     borderWidth: 2,
     borderColor: 'transparent',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
   },
   processOptionActive: {
     backgroundColor: '#e8f5e8',
     borderColor: '#4CAF50',
-    elevation: 4,
-    shadowColor: '#4CAF50',
-    shadowOpacity: 0.2,
   },
   processOptionContent: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
-  },
-  processIconContainer: {
-    marginRight: 12,
   },
   processOptionText: {
     fontSize: 16,
@@ -1484,21 +992,16 @@ const styles = StyleSheet.create({
   },
   processCounter: {
     backgroundColor: '#2196F3',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 15,
-    marginLeft: 15,
-    minWidth: 35,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 10,
+    minWidth: 30,
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#2196F3',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
   },
   processCounterText: {
     color: '#fff',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: 'bold',
   },
 });
